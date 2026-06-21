@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <meta name="theme-color" content="#171816" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>Pocket Remote</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="brand">POCKET REMOTE</div>
+        <div class="status" id="status"><span class="dot"></span><span id="statusText">Looking for TV</span></div>
+      </header>
+
+      <section class="remote" aria-label="Chromecast remote control">
+        <div class="top-row">
+          <button class="key key-small power" data-key="power" aria-label="Power">
+            <svg viewBox="0 0 24 24"><path d="M12 2v9M6.2 5.8a8 8 0 1 0 11.6 0" /></svg>
+          </button>
+          <button class="key key-small" data-key="home" aria-label="Home">
+            <svg viewBox="0 0 24 24"><path d="m4 10 8-7 8 7v10h-6v-6h-4v6H4Z" /></svg>
+          </button>
+        </div>
+
+        <div class="dpad" aria-label="Directional pad">
+          <button data-key="up" class="dpad-key up" aria-label="Up"><svg viewBox="0 0 24 24"><path d="m7 14 5-5 5 5" /></svg></button>
+          <button data-key="left" class="dpad-key left" aria-label="Left"><svg viewBox="0 0 24 24"><path d="m14 7-5 5 5 5" /></svg></button>
+          <button data-key="enter" class="select" aria-label="Select"><span>OK</span></button>
+          <button data-key="right" class="dpad-key right" aria-label="Right"><svg viewBox="0 0 24 24"><path d="m10 7 5 5-5 5" /></svg></button>
+          <button data-key="down" class="dpad-key down" aria-label="Down"><svg viewBox="0 0 24 24"><path d="m7 10 5 5 5-5" /></svg></button>
+        </div>
+
+        <div class="volume" aria-label="Volume">
+          <button data-key="volume_up" aria-label="Volume up"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg></button>
+          <span class="volume-label">VOL</span>
+          <button data-key="volume_down" aria-label="Volume down"><svg viewBox="0 0 24 24"><path d="M5 12h14" /></svg></button>
+        </div>
+      </section>
+    </main>
+
+    <div class="scrim" id="scrim" hidden>
+      <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+        <div class="handle"></div>
+        <p class="eyebrow">SETUP</p>
+        <h1 id="sheetTitle">Finding your TV</h1>
+        <p id="sheetBody">Keep this device on the same Wi-Fi network as your Chromecast.</p>
+        <form id="codeForm" hidden>
+          <input id="pairCode" inputmode="text" autocomplete="one-time-code" autocapitalize="characters" spellcheck="false" maxlength="6" placeholder="A1B2C3" aria-label="Pairing code" />
+          <button type="submit" class="primary">Connect</button>
+        </form>
+        <button id="actionButton" class="primary" hidden>Pair this TV</button>
+      </section>
+    </div>
+
+    <div class="toast" id="toast" role="status" hidden></div>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
