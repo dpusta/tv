@@ -27,16 +27,7 @@ main {
 }
 
 header {
-  position: absolute;
-  z-index: 2;
-  top: max(17px, env(safe-area-inset-top));
-  left: max(20px, env(safe-area-inset-left));
-  right: max(20px, env(safe-area-inset-right));
-  max-width: 440px;
-  margin: auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: none;
 }
 .brand { font-size: 11px; font-weight: 750; letter-spacing: .19em; color: #77786f; }
 .status { display: flex; align-items: center; gap: 7px; color: #777970; font-size: 12px; }
@@ -48,28 +39,28 @@ header {
   width: 100%;
   min-height: 0;
   margin: 0;
-  padding: max(64px, calc(env(safe-area-inset-top) + 48px)) max(10px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+  padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
   border-radius: 0;
   background: linear-gradient(150deg, #f5f4ee 0%, #deddd5 100%);
   box-shadow: none;
   color: #242521;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(16px, 2.5dvh, 24px);
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: stretch;
+  gap: 8px;
 }
 
 button { color: inherit; font: inherit; border: 0; cursor: pointer; }
 button:active { transform: scale(.94); }
 button:disabled { opacity: .4; }
-svg { width: 32px; height: 32px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+svg { width: clamp(38px, 11vw, 52px); height: clamp(38px, 11vw, 52px); fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
-.top-row { display: flex; justify-content: center; gap: clamp(24px, 8vw, 38px); }
+.top-row { width: 100%; min-height: 0; display: flex; gap: 8px; }
 .key {
-  width: clamp(84px, 24vw, 104px);
-  height: clamp(84px, 24vw, 104px);
-  border-radius: 50%;
+  flex: 1;
+  width: auto;
+  height: 100%;
+  border-radius: 28px;
   display: grid;
   place-items: center;
   background: #cac9c1;
@@ -80,8 +71,8 @@ svg { width: 32px; height: 32px; fill: none; stroke: currentColor; stroke-width:
 
 .dpad {
   position: relative;
-  width: clamp(310px, min(94vw, 48dvh), 440px);
-  max-width: 100%;
+  width: min(100%, 460px);
+  justify-self: center;
   aspect-ratio: 1;
   border-radius: 50%;
   background: linear-gradient(145deg, #d5d4cc, #c4c3bb);
@@ -101,24 +92,26 @@ svg { width: 32px; height: 32px; fill: none; stroke: currentColor; stroke-width:
   top: 29%;
   background: #edede7 !important;
   box-shadow: 0 5px 12px rgba(40,41,36,.2), inset 0 1px 1px #fff;
-  font-size: 16px;
+  font-size: clamp(16px, 5vw, 22px);
   font-weight: 800;
   letter-spacing: .11em;
 }
 
 .volume {
-  width: clamp(88px, 25vw, 108px);
-  height: clamp(164px, 23dvh, 200px);
-  border-radius: 54px;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border-radius: 28px;
   overflow: hidden;
   display: grid;
-  grid-template-rows: 1fr 24px 1fr;
+  grid-template-columns: 1fr 54px 1fr;
+  grid-template-rows: 1fr;
   background: #cac9c1;
   box-shadow: 0 6px 13px rgba(40, 41, 36, .2), inset 0 1px 1px rgba(255,255,255,.7);
 }
 .volume button { background: transparent; display: grid; place-items: center; }
 .volume button:active { background: rgba(0,0,0,.06); transform: none; }
-.volume-label { display: grid; place-items: center; color: #77776f; font-size: 10px; font-weight: 800; letter-spacing: .16em; }
+.volume-label { display: grid; place-items: center; color: #77776f; font-size: 11px; font-weight: 800; letter-spacing: .16em; }
 
 .scrim { position: fixed; inset: 0; background: rgba(10, 11, 9, .7); backdrop-filter: blur(8px); z-index: 5; }
 .scrim[hidden], [hidden] { display: none !important; }
@@ -152,8 +145,7 @@ svg { width: 32px; height: 32px; fill: none; stroke: currentColor; stroke-width:
 }
 
 @media (max-height: 700px) {
-  .remote { padding-top: max(54px, calc(env(safe-area-inset-top) + 42px)); padding-bottom: max(8px, env(safe-area-inset-bottom)); gap: 12px; }
-  .key { width: 74px; height: 74px; }
-  .dpad { width: min(88vw, 310px); }
-  .volume { height: 132px; width: 78px; }
+  .remote { gap: 6px; }
+  .top-row { gap: 6px; }
+  .key, .volume { border-radius: 22px; }
 }
