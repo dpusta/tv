@@ -149,3 +149,54 @@ svg { width: clamp(38px, 11vw, 52px); height: clamp(38px, 11vw, 52px); fill: non
   .top-row { gap: 6px; }
   .key, .volume { border-radius: 22px; }
 }
+
+/* Nine equal, full-screen controls. */
+.remote {
+  grid-template: repeat(3, minmax(0, 1fr)) / repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.top-row,
+.dpad,
+.volume {
+  display: contents;
+}
+
+.remote button,
+.dpad button,
+.volume button,
+.select {
+  position: static;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  border-radius: 24px;
+  background: #cac9c1 !important;
+  box-shadow: 0 5px 12px rgba(40, 41, 36, .18), inset 0 1px 1px rgba(255, 255, 255, .7);
+  display: grid;
+  place-items: center;
+}
+
+.remote button:active,
+.volume button:active {
+  transform: scale(.96);
+  background: #bdbcb4 !important;
+}
+
+.volume-label { display: none; }
+
+.remote [data-key="power"]      { grid-area: 1 / 1; }
+.remote [data-key="up"]         { grid-area: 1 / 2; }
+.remote [data-key="home"]       { grid-area: 1 / 3; }
+.remote [data-key="left"]       { grid-area: 2 / 1; }
+.remote [data-key="enter"]      { grid-area: 2 / 2; }
+.remote [data-key="right"]      { grid-area: 2 / 3; }
+.remote [data-key="volume_down"] { grid-area: 3 / 1; }
+.remote [data-key="down"]       { grid-area: 3 / 2; }
+.remote [data-key="volume_up"]  { grid-area: 3 / 3; }
+
+.remote svg {
+  width: clamp(48px, 15vw, 68px);
+  height: clamp(48px, 15vw, 68px);
+}
