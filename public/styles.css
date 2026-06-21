@@ -18,7 +18,8 @@ body {
 }
 
 main {
-  width: min(100%, 480px);
+  width: 100vw;
+  max-width: none;
   height: 100dvh;
   margin: 0 auto;
   padding: 0;
@@ -140,8 +141,8 @@ svg { width: clamp(38px, 11vw, 52px); height: clamp(38px, 11vw, 52px); fill: non
 .toast { position: fixed; left: 50%; bottom: max(24px, env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 10; width: max-content; max-width: calc(100vw - 40px); padding: 11px 15px; border-radius: 12px; background: #f0efe8; color: #292a25; font-size: 13px; box-shadow: 0 8px 30px rgba(0,0,0,.35); }
 
 @media (min-width: 481px) {
-  body { background: #171816; }
-  .remote { box-shadow: 0 0 70px rgba(0, 0, 0, .38); }
+  body { background: #e8e7df; }
+  .remote { box-shadow: none; }
 }
 
 @media (max-height: 700px) {
