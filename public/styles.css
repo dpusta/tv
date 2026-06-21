@@ -48,7 +48,7 @@ header {
   width: 100%;
   min-height: 0;
   margin: 0;
-  padding: max(70px, calc(env(safe-area-inset-top) + 54px)) max(25px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(25px, env(safe-area-inset-left));
+  padding: max(64px, calc(env(safe-area-inset-top) + 48px)) max(10px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
   border-radius: 0;
   background: linear-gradient(150deg, #f5f4ee 0%, #deddd5 100%);
   box-shadow: none;
@@ -56,18 +56,19 @@ header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
+  gap: clamp(16px, 2.5dvh, 24px);
 }
 
 button { color: inherit; font: inherit; border: 0; cursor: pointer; }
 button:active { transform: scale(.94); }
 button:disabled { opacity: .4; }
-svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+svg { width: 32px; height: 32px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
-.top-row { width: 100%; display: flex; justify-content: space-between; }
+.top-row { display: flex; justify-content: center; gap: clamp(24px, 8vw, 38px); }
 .key {
-  width: clamp(68px, 19vw, 82px);
-  height: clamp(68px, 19vw, 82px);
+  width: clamp(84px, 24vw, 104px);
+  height: clamp(84px, 24vw, 104px);
   border-radius: 50%;
   display: grid;
   place-items: center;
@@ -79,7 +80,7 @@ svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width:
 
 .dpad {
   position: relative;
-  width: clamp(270px, min(86vw, 42dvh), 370px);
+  width: clamp(310px, min(94vw, 48dvh), 440px);
   max-width: 100%;
   aspect-ratio: 1;
   border-radius: 50%;
@@ -87,28 +88,28 @@ svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width:
   box-shadow: 0 11px 20px rgba(36, 37, 33, .23), inset 0 1px 2px #fff;
 }
 .dpad button { position: absolute; background: transparent; display: grid; place-items: center; transition: transform 80ms ease; }
-.dpad-key { width: 34%; height: 34%; }
-.dpad-key.up { top: 0; left: 33%; }
-.dpad-key.down { bottom: 0; left: 33%; }
-.dpad-key.left { left: 0; top: 33%; }
-.dpad-key.right { right: 0; top: 33%; }
+.dpad-key { width: 36%; height: 36%; }
+.dpad-key.up { top: 0; left: 32%; }
+.dpad-key.down { bottom: 0; left: 32%; }
+.dpad-key.left { left: 0; top: 32%; }
+.dpad-key.right { right: 0; top: 32%; }
 .select {
-  width: 38%;
-  height: 38%;
+  width: 42%;
+  height: 42%;
   border-radius: 50%;
-  left: 31%;
-  top: 31%;
+  left: 29%;
+  top: 29%;
   background: #edede7 !important;
   box-shadow: 0 5px 12px rgba(40,41,36,.2), inset 0 1px 1px #fff;
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 800;
   letter-spacing: .11em;
 }
 
 .volume {
-  width: clamp(76px, 21vw, 92px);
-  height: clamp(154px, 22dvh, 190px);
-  border-radius: 46px;
+  width: clamp(88px, 25vw, 108px);
+  height: clamp(164px, 23dvh, 200px);
+  border-radius: 54px;
   overflow: hidden;
   display: grid;
   grid-template-rows: 1fr 24px 1fr;
@@ -117,7 +118,7 @@ svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width:
 }
 .volume button { background: transparent; display: grid; place-items: center; }
 .volume button:active { background: rgba(0,0,0,.06); transform: none; }
-.volume-label { display: grid; place-items: center; color: #77776f; font-size: 8px; font-weight: 800; letter-spacing: .16em; }
+.volume-label { display: grid; place-items: center; color: #77776f; font-size: 10px; font-weight: 800; letter-spacing: .16em; }
 
 .scrim { position: fixed; inset: 0; background: rgba(10, 11, 9, .7); backdrop-filter: blur(8px); z-index: 5; }
 .scrim[hidden], [hidden] { display: none !important; }
@@ -151,8 +152,8 @@ svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width:
 }
 
 @media (max-height: 700px) {
-  .remote { padding-top: max(60px, calc(env(safe-area-inset-top) + 46px)); padding-bottom: max(14px, env(safe-area-inset-bottom)); }
-  .key { width: 62px; height: 62px; }
-  .dpad { width: min(76vw, 280px); }
-  .volume { height: 132px; width: 70px; }
+  .remote { padding-top: max(54px, calc(env(safe-area-inset-top) + 42px)); padding-bottom: max(8px, env(safe-area-inset-bottom)); gap: 12px; }
+  .key { width: 74px; height: 74px; }
+  .dpad { width: min(88vw, 310px); }
+  .volume { height: 132px; width: 78px; }
 }
