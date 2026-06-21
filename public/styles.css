@@ -13,37 +13,45 @@ body {
   margin: 0;
   min-height: 100dvh;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 50% 12%, rgba(143, 157, 117, .14), transparent 33%),
-    #171816;
+  background: #e8e7df;
   -webkit-tap-highlight-color: transparent;
 }
 
 main {
-  width: min(100%, 430px);
+  width: min(100%, 480px);
   height: 100dvh;
   margin: 0 auto;
-  padding: max(18px, env(safe-area-inset-top)) 22px max(16px, env(safe-area-inset-bottom));
+  padding: 0;
   display: flex;
   flex-direction: column;
 }
 
-header { display: flex; align-items: center; justify-content: space-between; min-height: 38px; }
-.brand { font-size: 11px; font-weight: 750; letter-spacing: .19em; color: #aead9f; }
-.status { display: flex; align-items: center; gap: 7px; color: #8d8f87; font-size: 12px; }
+header {
+  position: absolute;
+  z-index: 2;
+  top: max(17px, env(safe-area-inset-top));
+  left: max(20px, env(safe-area-inset-left));
+  right: max(20px, env(safe-area-inset-right));
+  max-width: 440px;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.brand { font-size: 11px; font-weight: 750; letter-spacing: .19em; color: #77786f; }
+.status { display: flex; align-items: center; gap: 7px; color: #777970; font-size: 12px; }
 .dot { width: 7px; height: 7px; border-radius: 50%; background: #d6a459; box-shadow: 0 0 0 4px rgba(214, 164, 89, .09); }
 .status.connected .dot { background: #9bb478; box-shadow: 0 0 0 4px rgba(155, 180, 120, .1); }
 
 .remote {
   flex: 1;
-  width: min(300px, 78vw);
-  max-height: 680px;
-  min-height: 565px;
-  margin: 18px auto 0;
-  padding: 30px 29px 28px;
-  border-radius: 74px 74px 56px 56px;
+  width: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: max(70px, calc(env(safe-area-inset-top) + 54px)) max(25px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(25px, env(safe-area-inset-left));
+  border-radius: 0;
   background: linear-gradient(150deg, #f5f4ee 0%, #deddd5 100%);
-  box-shadow: 0 30px 70px rgba(0, 0, 0, .45), inset 0 1px 1px #fff;
+  box-shadow: none;
   color: #242521;
   display: flex;
   flex-direction: column;
@@ -58,8 +66,8 @@ svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width:
 
 .top-row { width: 100%; display: flex; justify-content: space-between; }
 .key {
-  width: 54px;
-  height: 54px;
+  width: clamp(68px, 19vw, 82px);
+  height: clamp(68px, 19vw, 82px);
   border-radius: 50%;
   display: grid;
   place-items: center;
@@ -71,24 +79,25 @@ svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width:
 
 .dpad {
   position: relative;
-  width: 238px;
+  width: clamp(270px, min(86vw, 42dvh), 370px);
+  max-width: 100%;
   aspect-ratio: 1;
   border-radius: 50%;
   background: linear-gradient(145deg, #d5d4cc, #c4c3bb);
   box-shadow: 0 11px 20px rgba(36, 37, 33, .23), inset 0 1px 2px #fff;
 }
 .dpad button { position: absolute; background: transparent; display: grid; place-items: center; transition: transform 80ms ease; }
-.dpad-key { width: 78px; height: 76px; }
-.dpad-key.up { top: 0; left: 80px; }
-.dpad-key.down { bottom: 0; left: 80px; }
-.dpad-key.left { left: 0; top: 81px; }
-.dpad-key.right { right: 0; top: 81px; }
+.dpad-key { width: 34%; height: 34%; }
+.dpad-key.up { top: 0; left: 33%; }
+.dpad-key.down { bottom: 0; left: 33%; }
+.dpad-key.left { left: 0; top: 33%; }
+.dpad-key.right { right: 0; top: 33%; }
 .select {
-  width: 86px;
-  height: 86px;
+  width: 38%;
+  height: 38%;
   border-radius: 50%;
-  left: 76px;
-  top: 76px;
+  left: 31%;
+  top: 31%;
   background: #edede7 !important;
   box-shadow: 0 5px 12px rgba(40,41,36,.2), inset 0 1px 1px #fff;
   font-size: 12px;
@@ -97,9 +106,9 @@ svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width:
 }
 
 .volume {
-  width: 58px;
-  height: 142px;
-  border-radius: 30px;
+  width: clamp(76px, 21vw, 92px);
+  height: clamp(154px, 22dvh, 190px);
+  border-radius: 46px;
   overflow: hidden;
   display: grid;
   grid-template-rows: 1fr 24px 1fr;
@@ -136,11 +145,14 @@ svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width:
 #pairCode:focus { border-color: #8da06f; box-shadow: 0 0 0 3px rgba(141, 160, 111, .16); }
 .toast { position: fixed; left: 50%; bottom: max(24px, env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 10; width: max-content; max-width: calc(100vw - 40px); padding: 11px 15px; border-radius: 12px; background: #f0efe8; color: #292a25; font-size: 13px; box-shadow: 0 8px 30px rgba(0,0,0,.35); }
 
+@media (min-width: 481px) {
+  body { background: #171816; }
+  .remote { box-shadow: 0 0 70px rgba(0, 0, 0, .38); }
+}
+
 @media (max-height: 700px) {
-  .remote { min-height: 540px; margin-top: 8px; padding-top: 25px; padding-bottom: 24px; }
-  .dpad { width: 220px; }
-  .dpad-key.up, .dpad-key.down { left: 71px; }
-  .dpad-key.left, .dpad-key.right { top: 72px; }
-  .select { left: 70px; top: 70px; width: 80px; height: 80px; }
-  header { min-height: 28px; }
+  .remote { padding-top: max(60px, calc(env(safe-area-inset-top) + 46px)); padding-bottom: max(14px, env(safe-area-inset-bottom)); }
+  .key { width: 62px; height: 62px; }
+  .dpad { width: min(76vw, 280px); }
+  .volume { height: 132px; width: 70px; }
 }
