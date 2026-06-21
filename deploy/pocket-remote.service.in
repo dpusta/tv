@@ -1,0 +1,35 @@
+[Unit]
+Description=Pocket Remote for Chromecast with Google TV
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=@SERVICE_USER@
+Group=@SERVICE_GROUP@
+WorkingDirectory=@APP_DIR@
+ExecStart="@NODE_BIN@" "@APP_DIR@/src/server.js"
+Environment=NODE_ENV=production
+EnvironmentFile=-/etc/pocket-remote.env
+Restart=on-failure
+RestartSec=3s
+TimeoutStopSec=10s
+
+# The app needs normal LAN multicast and TCP access for discovery and control.
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths="@APP_DIR@/data"
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+ProtectKernelLogs=true
+ProtectClock=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+[Install]
+WantedBy=multi-user.target

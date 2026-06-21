@@ -21,6 +21,32 @@ The Chromecast must expose Android TV Remote Service ports 6466 and 6467, and mD
 - `CHROMECAST_HOST`: optional fixed Chromecast IP, bypassing mDNS discovery
 - `CHROMECAST_NAME`: optional display name used with `CHROMECAST_HOST`
 
+## systemd
+
+Install dependencies and then install the service from the project directory:
+
+```sh
+npm install --omit=dev
+chmod +x deploy/install-systemd.sh
+./deploy/install-systemd.sh
+```
+
+The installer runs the service as the current user, enables it at boot, and starts it immediately. To choose another account or Node.js binary:
+
+```sh
+SERVICE_USER=pocket-remote NODE_BIN=/usr/bin/node ./deploy/install-systemd.sh
+```
+
+Runtime settings live in `/etc/pocket-remote.env`. After editing that file, restart the service:
+
+```sh
+sudo systemctl restart pocket-remote
+sudo systemctl status pocket-remote
+journalctl -u pocket-remote -f
+```
+
+For reliable discovery, the Linux host must permit mDNS multicast on UDP port 5353. If discovery is unavailable, set `CHROMECAST_HOST` to the Chromecast's reserved IP in `/etc/pocket-remote.env`.
+
 ## Limits
 
 - This controls **Chromecast with Google TV**, not older cast-only Chromecast models.
