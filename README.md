@@ -21,7 +21,28 @@ The Chromecast must expose Android TV Remote Service ports 6466 and 6467, and mD
 - `CHROMECAST_HOST`: optional fixed Chromecast IP, bypassing mDNS discovery
 - `CHROMECAST_NAME`: optional display name used with `CHROMECAST_HOST`
 
-## systemd
+## Docker Compose
+
+Docker Compose is the recommended Linux deployment. It uses host networking so mDNS discovery can see the Chromecast:
+
+```sh
+cp .env.example .env
+docker compose up -d --build
+docker compose logs -f
+```
+
+Open `http://<linux-host-ip>:3000`. Pairing credentials persist in the `pocket-remote-data` named volume.
+
+To update or restart:
+
+```sh
+docker compose up -d --build
+docker compose restart
+```
+
+If discovery does not find the Chromecast, assign it a reserved IP and set `CHROMECAST_HOST` in `.env`. Host networking is supported by Docker Engine on Linux; Docker Desktop environments handle it differently and are not the intended deployment target.
+
+## systemd (alternative)
 
 Install dependencies and then install the service from the project directory:
 

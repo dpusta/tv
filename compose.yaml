@@ -1,0 +1,17 @@
+services:
+  pocket-remote:
+    build:
+      context: .
+    container_name: pocket-remote
+    network_mode: host
+    init: true
+    restart: unless-stopped
+    environment:
+      PORT: ${PORT:-3000}
+      CHROMECAST_HOST: ${CHROMECAST_HOST:-}
+      CHROMECAST_NAME: ${CHROMECAST_NAME:-Google TV}
+    volumes:
+      - pocket-remote-data:/app/data
+
+volumes:
+  pocket-remote-data:
