@@ -1,6 +1,6 @@
 import express from 'express';
 import { Bonjour } from 'bonjour-service';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { AndroidRemote, KEY_MAP, RemoteDirection } from './keys.js';
@@ -46,6 +46,27 @@ async function saveCredentials() {
   await writeFile(credentialsFile, JSON.stringify(credentials, null, 2), { mode: 0o600 });
 }
 
+async function clearCredentials() {
+  credentials = null;
+  try {
+    await unlink(credentialsFile);
+  } catch (error) {
+    if (error.code !== 'ENOENT') console.error('Could not remove saved credentials:', error);
+  }
+}
+
+function shouldForgetSavedPairing(error, hadSavedCredentials) {
+  return Boolean(hadSavedCredentials && ['ECONNREFUSED', 'ECONNRESET', 'EPIPE'].includes(error?.code));
+}
+
+async function handleSavedPairingFailure(error, hadSavedCredentials) {
+  if (!shouldForgetSavedPairing(error, hadSavedCredentials)) return false;
+  await clearCredentials();
+  state.phase = state.device ? 'found' : 'searching';
+  state.error = 'The saved pairing no longer works. Pair this TV again.';
+  return true;
+}
+
 function ipv4Address(service) {
   return service.addresses?.find((address) => /^\d{1,3}(\.\d{1,3}){3}$/.test(address));
 }
@@ -72,6 +93,7 @@ async function connect(host, pairing) {
   state.phase = pairing ? 'pairing' : 'connecting';
   state.error = null;
   clearTimeout(connectTimer);
+  const hadSavedCredentials = Boolean(credentials && !pairing);
 
   try {
     if (remote?.remoteManager) remote.stop();
@@ -101,11 +123,17 @@ async function connect(host, pairing) {
     remote.on('powered', (powered) => { state.powered = powered; });
     remote.on('volume', (volume) => { state.volume = volume; });
     remote.on('unpaired', () => {
-      credentials = null;
+      void clearCredentials();
       state.phase = 'found';
       connectingHost = null;
     });
-    remote.on('error', (error) => {
+    remote.on('error', async (error) => {
+      if (state.phase === 'connecting' && await handleSavedPairingFailure(error, hadSavedCredentials)) {
+        clearTimeout(connectTimer);
+        connectingHost = null;
+        if (remote?.remoteManager) remote.stop();
+        return;
+      }
       state.error = error.message || 'Chromecast connection error.';
     });
 
@@ -129,8 +157,11 @@ async function connect(host, pairing) {
       .catch((error) => {
         clearTimeout(connectTimer);
         connectingHost = null;
-        state.phase = 'error';
-        state.error = error.message || 'Could not connect to the Chromecast.';
+        void handleSavedPairingFailure(error, hadSavedCredentials).then((handled) => {
+          if (handled) return;
+          state.phase = 'error';
+          state.error = error.message || 'Could not connect to the Chromecast.';
+        });
       });
   } catch (error) {
     connectingHost = null;
