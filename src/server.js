@@ -24,7 +24,15 @@ let credentials = null;
 let remote = null;
 let connectingHost = null;
 let connectTimer = null;
+let reconnectTimer = null;
 let bonjour = null;
+let lastRemoteActivity = 0;
+let lastConnectAttempt = 0;
+let observedClient = null;
+
+const CONNECTION_TIMEOUT_MS = 15_000;
+const STALE_CONNECTION_MS = 25_000;
+const RETRY_INTERVAL_MS = 15_000;
 
 function publicState() {
   return {
@@ -55,85 +63,147 @@ async function clearCredentials() {
   }
 }
 
-function shouldForgetSavedPairing(error, hadSavedCredentials) {
-  return Boolean(hadSavedCredentials && ['ECONNREFUSED', 'ECONNRESET', 'EPIPE'].includes(error?.code));
-}
-
-async function handleSavedPairingFailure(error, hadSavedCredentials) {
-  if (!shouldForgetSavedPairing(error, hadSavedCredentials)) return false;
-  await clearCredentials();
-  state.phase = state.device ? 'found' : 'searching';
-  state.error = 'The saved pairing no longer works. Pair this TV again.';
-  return true;
-}
-
 function ipv4Address(service) {
   return service.addresses?.find((address) => /^\d{1,3}(\.\d{1,3}){3}$/.test(address));
 }
 
 function discover(service) {
   const host = ipv4Address(service);
-  if (!host || connectingHost || state.phase === 'connected') return;
+  if (!host) return;
+
+  if (state.device?.host === host && (connectingHost || state.phase === 'connected')) return;
 
   state.device = {
     name: service.txt?.fn || service.name || 'Google TV',
     host,
   };
+
+  if (state.phase === 'connected') {
+    scheduleReconnect('Chromecast network address changed.', 250);
+    return;
+  }
+
+  if (connectingHost) return;
   state.phase = credentials ? 'connecting' : 'found';
   state.error = null;
 
   if (credentials) void connect(host, false);
 }
 
-async function connect(host, pairing) {
-  if (!host) throw new Error('No Chromecast has been found yet.');
-  if (connectingHost === host || state.phase === 'connected') return;
+function teardownRemote() {
+  const oldRemote = remote;
+  remote = null;
+  observedClient = null;
+  lastRemoteActivity = 0;
 
+  if (!oldRemote) return;
+
+  const manager = oldRemote.remoteManager;
+  if (manager) {
+    // Disable the package's recursive reconnect loop; this server owns retries.
+    manager.start = async () => false;
+    manager.removeAllListeners();
+    if (manager.client) {
+      manager.client.removeAllListeners('close');
+      manager.client.destroy();
+    }
+  }
+
+  const pairingClient = oldRemote.pairingManager?.client;
+  if (pairingClient) {
+    pairingClient.removeAllListeners('close');
+    pairingClient.destroy();
+  }
+  oldRemote.removeAllListeners();
+}
+
+function scheduleReconnect(reason, delay = 1_000) {
+  if (!credentials || !state.device || reconnectTimer) return;
+
+  console.info(`Scheduling Chromecast reconnect: ${reason}`);
+  state.phase = 'connecting';
+  state.error = null;
+  connectingHost = null;
+
+  reconnectTimer = setTimeout(() => {
+    reconnectTimer = null;
+    void connect(state.device.host, false, true);
+  }, delay);
+}
+
+function observeRemoteClient(currentRemote) {
+  const client = currentRemote.remoteManager?.client;
+  if (!client || client === observedClient) return;
+
+  observedClient = client;
+  lastRemoteActivity = Date.now();
+
+  client.on('data', () => {
+    if (remote === currentRemote) lastRemoteActivity = Date.now();
+  });
+  client.once('close', () => {
+    if (remote !== currentRemote) return;
+    // Prevent the library's delayed close handler from opening a competing socket.
+    if (currentRemote.remoteManager) currentRemote.remoteManager.start = async () => false;
+    scheduleReconnect('remote socket closed');
+  });
+}
+
+async function connect(host, pairing, force = false) {
+  if (!host) throw new Error('No Chromecast has been found yet.');
+  if (!force && (connectingHost === host || state.phase === 'connected')) return;
+
+  clearTimeout(reconnectTimer);
+  reconnectTimer = null;
+  teardownRemote();
   connectingHost = host;
+  lastConnectAttempt = Date.now();
   state.phase = pairing ? 'pairing' : 'connecting';
   state.error = null;
   clearTimeout(connectTimer);
-  const hadSavedCredentials = Boolean(credentials && !pairing);
 
   try {
-    if (remote?.remoteManager) remote.stop();
-    remote?.pairingManager?.client?.destroy();
-    remote = new AndroidRemote(host, {
+    const currentRemote = new AndroidRemote(host, {
       pairing_port: 6467,
       remote_port: 6466,
       service_name: 'Pocket Remote',
       cert: pairing ? {} : credentials?.cert || {},
     });
+    remote = currentRemote;
 
-    remote.on('secret', () => {
+    currentRemote.on('secret', () => {
+      if (remote !== currentRemote) return;
       state.phase = 'code';
     });
-    remote.on('ready', async () => {
+    currentRemote.on('ready', async () => {
+      if (remote !== currentRemote) return;
       state.phase = 'connected';
       state.error = null;
       connectingHost = null;
       clearTimeout(connectTimer);
-      credentials = { cert: remote.getCertificate() };
+      observeRemoteClient(currentRemote);
+      credentials = { cert: currentRemote.getCertificate() };
       try {
         await saveCredentials();
       } catch (error) {
         state.error = `Connected, but credentials could not be saved: ${error.message}`;
       }
     });
-    remote.on('powered', (powered) => { state.powered = powered; });
-    remote.on('volume', (volume) => { state.volume = volume; });
-    remote.on('unpaired', () => {
+    currentRemote.on('powered', (powered) => {
+      if (remote === currentRemote) state.powered = powered;
+    });
+    currentRemote.on('volume', (volume) => {
+      if (remote === currentRemote) state.volume = volume;
+    });
+    currentRemote.on('unpaired', () => {
+      if (remote !== currentRemote) return;
       void clearCredentials();
       state.phase = 'found';
+      state.error = 'The saved pairing no longer works. Pair this TV again.';
       connectingHost = null;
     });
-    remote.on('error', async (error) => {
-      if (state.phase === 'connecting' && await handleSavedPairingFailure(error, hadSavedCredentials)) {
-        clearTimeout(connectTimer);
-        connectingHost = null;
-        if (remote?.remoteManager) remote.stop();
-        return;
-      }
+    currentRemote.on('error', (error) => {
+      if (remote !== currentRemote) return;
       state.error = error.message || 'Chromecast connection error.';
     });
 
@@ -143,10 +213,12 @@ async function connect(host, pairing) {
         state.error = 'The Chromecast did not respond. Check that it is awake and on the same network.';
         connectingHost = null;
       }
-    }, 15_000);
+    }, CONNECTION_TIMEOUT_MS);
 
-    void remote.start()
+    void currentRemote.start()
       .then((started) => {
+        if (remote !== currentRemote) return;
+        observeRemoteClient(currentRemote);
         if (!started && state.phase !== 'connected' && state.phase !== 'code') {
           clearTimeout(connectTimer);
           connectingHost = null;
@@ -155,13 +227,11 @@ async function connect(host, pairing) {
         }
       })
       .catch((error) => {
+        if (remote !== currentRemote) return;
         clearTimeout(connectTimer);
         connectingHost = null;
-        void handleSavedPairingFailure(error, hadSavedCredentials).then((handled) => {
-          if (handled) return;
-          state.phase = 'error';
-          state.error = error.message || 'Could not connect to the Chromecast.';
-        });
+        state.phase = 'error';
+        state.error = error.message || 'Could not connect to the Chromecast.';
       });
   } catch (error) {
     connectingHost = null;
@@ -219,6 +289,11 @@ app.post('/api/key', (request, response) => {
   const key = request.body?.key;
   if (state.phase !== 'connected' || !remote) return response.status(409).json({ error: 'Chromecast is not connected.' });
   if (key !== 'power' && !(key in KEY_MAP)) return response.status(400).json({ error: 'Unknown remote key.' });
+  const client = remote.remoteManager?.client;
+  if (!client || client.destroyed || !client.writable) {
+    scheduleReconnect('key pressed while socket was unavailable', 250);
+    return response.status(503).json({ error: 'Chromecast is reconnecting. Try again in a moment.' });
+  }
   try {
     if (key === 'power') remote.sendPower();
     else remote.sendKey(KEY_MAP[key], RemoteDirection.SHORT);
@@ -264,9 +339,35 @@ const server = app.listen(port, '0.0.0.0', () => {
   console.log(`Pocket Remote listening on http://0.0.0.0:${port}`);
 });
 
+const watchdog = setInterval(() => {
+  if (!credentials || !state.device) return;
+
+  if (state.phase === 'connected' && remote) {
+    observeRemoteClient(remote);
+    const client = remote.remoteManager?.client;
+    const stale = lastRemoteActivity > 0 && Date.now() - lastRemoteActivity > STALE_CONNECTION_MS;
+    if (!client || client.destroyed || !client.writable || stale) {
+      scheduleReconnect(stale ? 'remote stopped sending keepalive messages' : 'remote socket unavailable');
+    }
+    return;
+  }
+
+  if (
+    !reconnectTimer
+    && state.phase !== 'code'
+    && state.phase !== 'pairing'
+    && Date.now() - lastConnectAttempt >= RETRY_INTERVAL_MS
+  ) {
+    scheduleReconnect('periodic retry');
+  }
+}, 5_000);
+
 function shutdown() {
+  clearInterval(watchdog);
+  clearTimeout(connectTimer);
+  clearTimeout(reconnectTimer);
   bonjour?.destroy();
-  if (remote?.remoteManager) remote.stop();
+  teardownRemote();
   server.close();
 }
 
