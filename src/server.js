@@ -6,12 +6,15 @@ import { fileURLToPath } from 'node:url';
 import { AndroidRemote, KEY_MAP, RemoteDirection } from './keys.js';
 import { normalizePairingCode } from './pairing-code.js';
 import { createImeStateDecoder, createImeTextMessage } from './remote-ime.js';
+import { patchRemoteFeatureNegotiation } from './remote-protocol.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
 const dataDir = path.join(root, 'data');
 const credentialsFile = path.join(dataDir, 'remote.json');
 const port = Number(process.env.PORT || 3000);
+
+patchRemoteFeatureNegotiation();
 
 const state = {
   phase: 'searching',
