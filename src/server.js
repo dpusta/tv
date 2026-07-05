@@ -38,6 +38,7 @@ let lastImeTextAt = 0;
 const CONNECTION_TIMEOUT_MS = 15_000;
 const STALE_CONNECTION_MS = 25_000;
 const RETRY_INTERVAL_MS = 15_000;
+const IME_CHARACTER_TIMEOUT_MS = 1_000;
 
 function publicState() {
   return {
@@ -159,6 +160,21 @@ function observeRemoteClient(currentRemote) {
     if (currentRemote.remoteManager) currentRemote.remoteManager.start = async () => false;
     scheduleReconnect('remote socket closed');
   });
+}
+
+async function waitForImeChange(previous, timeout = IME_CHARACTER_TIMEOUT_MS) {
+  const deadline = Date.now() + timeout;
+  while (Date.now() < deadline) {
+    if (
+      imeState.start !== previous.start
+      || imeState.end !== previous.end
+      || imeState.value !== previous.value
+    ) {
+      return true;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 25));
+  }
+  return false;
 }
 
 async function connect(host, pairing, force = false) {
@@ -347,9 +363,21 @@ app.post('/api/text', async (request, response) => {
   textSending = true;
   try {
     console.info(`Sending IME text (${[...text].length} characters)`);
-    client.write(createImeTextMessage(text, imeState));
+    let acceptedCharacters = 0;
+    for (const character of [...text]) {
+      const previous = {
+        start: imeState.start,
+        end: imeState.end,
+        value: imeState.value,
+      };
+      client.write(createImeTextMessage(character, imeState));
+      if (!await waitForImeChange(previous)) {
+        throw new Error(`The TV stopped accepting text after ${acceptedCharacters} characters.`);
+      }
+      acceptedCharacters += 1;
+    }
     lastImeTextAt = Date.now();
-    await new Promise((resolve) => setTimeout(resolve, 75));
+    console.info(`IME text accepted (${acceptedCharacters} characters)`);
     response.status(204).end();
   } catch (error) {
     response.status(503).json({ error: error.message });
