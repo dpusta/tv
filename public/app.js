@@ -13,6 +13,7 @@ const keyboardOverlay = document.querySelector('#keyboardOverlay');
 const keyboardForm = document.querySelector('#keyboardForm');
 const keyboardText = document.querySelector('#keyboardText');
 const keyboardCancel = document.querySelector('#keyboardCancel');
+const keyboardReveal = document.querySelector('#keyboardReveal');
 
 let currentState = null;
 let toastTimer;
@@ -123,6 +124,8 @@ keys.forEach((button) => {
 
 function closeKeyboard() {
   keyboardText.value = '';
+  keyboardText.type = 'password';
+  keyboardReveal.textContent = 'Show';
   keyboardOverlay.hidden = true;
 }
 
@@ -133,6 +136,12 @@ keyboardButton.addEventListener('click', () => {
 });
 
 keyboardCancel.addEventListener('click', closeKeyboard);
+keyboardReveal.addEventListener('click', () => {
+  const revealing = keyboardText.type === 'password';
+  keyboardText.type = revealing ? 'text' : 'password';
+  keyboardReveal.textContent = revealing ? 'Hide' : 'Show';
+  keyboardText.focus();
+});
 keyboardOverlay.addEventListener('click', (event) => {
   if (event.target === keyboardOverlay) closeKeyboard();
 });

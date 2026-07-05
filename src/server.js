@@ -14,6 +14,16 @@ const dataDir = path.join(root, 'data');
 const credentialsFile = path.join(dataDir, 'remote.json');
 const port = Number(process.env.PORT || 3000);
 
+const libraryDebug = console.debug.bind(console);
+console.debug = (...args) => {
+  if (process.env.DEBUG_REMOTE !== '1') return;
+  libraryDebug(...args.map((argument) => (
+    typeof argument === 'string'
+      ? argument.replace(/("value"\s*:\s*")[^"]*/g, '$1[redacted]')
+      : argument
+  )));
+};
+
 patchRemoteFeatureNegotiation();
 
 const state = {
@@ -162,6 +172,30 @@ function observeRemoteClient(currentRemote) {
     if (currentRemote.remoteManager) currentRemote.remoteManager.start = async () => false;
     scheduleReconnect('remote socket closed');
   });
+}
+
+async function verifyImeText(expected, previousCounterField, timeout = 3_000) {
+  const deadline = Date.now() + timeout;
+  let latest = '';
+
+  while (Date.now() < deadline) {
+    if (
+      imeState.counterField !== previousCounterField
+      && typeof imeState.value === 'string'
+    ) {
+      latest = imeState.value;
+      if (latest.length >= expected.length) break;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 25));
+  }
+
+  if (latest === expected) return;
+
+  const mismatch = [...expected].findIndex((character, index) => [...latest][index] !== character);
+  if (mismatch >= 0 && latest.length >= expected.length) {
+    throw new Error(`The TV altered the character at position ${mismatch + 1}. Nothing was submitted.`);
+  }
+  throw new Error(`The TV accepted ${[...latest].length} of ${[...expected].length} characters. Nothing was submitted.`);
 }
 
 async function connect(host, pairing, force = false) {
@@ -357,10 +391,11 @@ app.post('/api/text', async (request, response) => {
     // is visible. BACK hides it while preserving the focused text field.
     remote.sendKey(KEY_MAP.back, RemoteDirection.SHORT);
     await new Promise((resolve) => setTimeout(resolve, 350));
+    const previousCounterField = imeState.counterField;
     client.write(createImeTextMessage(text, imeState));
     lastImeTextAt = Date.now();
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    console.info(`IME text sent (${[...text].length} characters)`);
+    await verifyImeText(text, previousCounterField);
+    console.info(`IME text verified (${[...text].length} characters)`);
     response.status(204).end();
   } catch (error) {
     response.status(503).json({ error: error.message });

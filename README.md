@@ -17,6 +17,8 @@ The Chromecast must expose Android TV Remote Service ports 6466 and 6467, and mD
 
 To type on the TV, focus its text field first, tap the keyboard button in the remote, enter the text, and press **Enter**. The complete value is sent once through the Android TV IME protocol and is not logged or stored. The default web server uses HTTP, so only enter sensitive passwords on a trusted LAN or place an HTTPS reverse proxy in front of the app.
 
+Protocol debug logging is disabled by default because Android TV may echo text fields in plaintext. `DEBUG_REMOTE=1` enables sanitized protocol logs with text values redacted.
+
 ## Configuration
 
 - `PORT`: HTTP port, default `3000`

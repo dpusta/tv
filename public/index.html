@@ -65,7 +65,10 @@
       <form class="keyboard-panel" id="keyboardForm">
         <label for="keyboardText">Type on TV</label>
         <p>Focus a text field on the TV first, then press Enter to send.</p>
-        <input id="keyboardText" type="password" maxlength="256" autocomplete="new-password" autocapitalize="none" spellcheck="false" placeholder="Password or text" />
+        <div class="password-input">
+          <input id="keyboardText" type="password" maxlength="256" autocomplete="new-password" autocapitalize="none" spellcheck="false" placeholder="Password or text" />
+          <button type="button" id="keyboardReveal">Show</button>
+        </div>
         <div class="keyboard-actions">
           <button type="button" id="keyboardCancel">Close</button>
           <button type="submit">Enter</button>

@@ -228,7 +228,7 @@ svg { width: clamp(38px, 11vw, 52px); height: clamp(38px, 11vw, 52px); fill: non
 .keyboard-panel input {
   width: 100%;
   height: 64px;
-  padding: 0 18px;
+  padding: 0 78px 0 18px;
   border: 2px solid #cbc9c0;
   border-radius: 16px;
   outline: 0;
@@ -237,6 +237,17 @@ svg { width: clamp(38px, 11vw, 52px); height: clamp(38px, 11vw, 52px); fill: non
   font-size: 22px;
 }
 .keyboard-panel input:focus { border-color: #7d9161; }
+.password-input { position: relative; }
+.password-input > button {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  height: 50px;
+  padding: 0 16px;
+  border-radius: 12px;
+  background: #deddd5;
+  font-weight: 750;
+}
 .keyboard-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
 .keyboard-actions button { min-height: 56px; border-radius: 16px; background: #d4d2ca; font-weight: 750; }
 .keyboard-actions button[type="submit"] { background: #282a25; color: #fff; }
