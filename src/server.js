@@ -33,6 +33,7 @@ let observedClient = null;
 let textSending = false;
 let imeState = {};
 let imeDecoder = null;
+let lastImeTextAt = 0;
 
 const CONNECTION_TIMEOUT_MS = 15_000;
 const STALE_CONNECTION_MS = 25_000;
@@ -261,7 +262,13 @@ async function connect(host, pairing, force = false) {
 
 const app = express();
 app.use(express.json({ limit: '2kb' }));
-app.use(express.static(path.join(root, 'public')));
+app.use(express.static(path.join(root, 'public'), {
+  etag: false,
+  lastModified: false,
+  setHeaders(response) {
+    response.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  },
+}));
 
 app.get('/api/status', (_request, response) => response.json(publicState()));
 
@@ -305,7 +312,10 @@ app.post('/api/pair/code', (request, response) => {
 });
 
 app.post('/api/key', (request, response) => {
-  const key = request.body?.key;
+  const requestedKey = request.body?.key;
+  const key = requestedKey === 'enter' && Date.now() - lastImeTextAt < 3_000
+    ? 'keyboard_enter'
+    : requestedKey;
   if (state.phase !== 'connected' || !remote) return response.status(409).json({ error: 'Chromecast is not connected.' });
   if (key !== 'power' && !(key in KEY_MAP)) return response.status(400).json({ error: 'Unknown remote key.' });
   const client = remote.remoteManager?.client;
@@ -338,6 +348,7 @@ app.post('/api/text', async (request, response) => {
   try {
     console.info(`Sending IME text (${[...text].length} characters)`);
     client.write(createImeTextMessage(text, imeState));
+    lastImeTextAt = Date.now();
     await new Promise((resolve) => setTimeout(resolve, 75));
     response.status(204).end();
   } catch (error) {

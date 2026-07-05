@@ -49,7 +49,8 @@ const root = protobufjs.parse(schema, { keepCase: false }).root;
 const RemoteMessage = root.lookupType('remote.RemoteMessage');
 
 export function createImeTextMessage(text, counters = {}) {
-  const lastCharacter = Math.max([...text].length - 1, 0);
+  const start = Number.isInteger(counters.start) ? counters.start : 0;
+  const end = Number.isInteger(counters.end) ? counters.end : start;
   const message = RemoteMessage.create({
     remoteImeBatchEdit: {
       imeCounter: counters.imeCounter || 0,
@@ -57,8 +58,8 @@ export function createImeTextMessage(text, counters = {}) {
       editInfo: [{
         insert: 1,
         textFieldStatus: {
-          start: lastCharacter,
-          end: lastCharacter,
+          start,
+          end,
           value: text,
         },
       }],
@@ -104,6 +105,8 @@ export function createImeStateDecoder(onState) {
                 imeCounter: batch.imeCounter,
                 fieldCounter: batch.fieldCounter,
                 insertedText: batch.editInfo.map((edit) => edit.textFieldStatus?.value || '').join(''),
+                insertionStart: batch.editInfo[0]?.textFieldStatus?.start,
+                insertionEnd: batch.editInfo[0]?.textFieldStatus?.end,
               }),
               ...(status && {
                 counterField: status.counterField,
