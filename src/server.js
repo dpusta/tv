@@ -3,8 +3,9 @@ import { Bonjour } from 'bonjour-service';
 import { mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { AndroidRemote, KEY_MAP, RemoteDirection, RemoteKeyCode, textKeySequence } from './keys.js';
+import { AndroidRemote, KEY_MAP, RemoteDirection, RemoteKeyCode } from './keys.js';
 import { normalizePairingCode } from './pairing-code.js';
+import { createImeStateDecoder, createImeTextMessage } from './remote-ime.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
@@ -30,6 +31,8 @@ let lastRemoteActivity = 0;
 let lastConnectAttempt = 0;
 let observedClient = null;
 let textSending = false;
+let imeState = {};
+let imeDecoder = null;
 
 const CONNECTION_TIMEOUT_MS = 15_000;
 const STALE_CONNECTION_MS = 25_000;
@@ -96,6 +99,8 @@ function teardownRemote() {
   remote = null;
   observedClient = null;
   lastRemoteActivity = 0;
+  imeState = {};
+  imeDecoder = null;
 
   if (!oldRemote) return;
 
@@ -138,9 +143,14 @@ function observeRemoteClient(currentRemote) {
 
   observedClient = client;
   lastRemoteActivity = Date.now();
+  imeDecoder = createImeStateDecoder((update) => {
+    if (remote === currentRemote) imeState = { ...imeState, ...update };
+  });
 
-  client.on('data', () => {
-    if (remote === currentRemote) lastRemoteActivity = Date.now();
+  client.on('data', (data) => {
+    if (remote !== currentRemote) return;
+    lastRemoteActivity = Date.now();
+    imeDecoder?.push(data);
   });
   client.once('close', () => {
     if (remote !== currentRemote) return;
@@ -327,24 +337,15 @@ app.post('/api/text', async (request, response) => {
     return response.status(503).json({ error: 'Chromecast is reconnecting. Try again in a moment.' });
   }
 
-  let sequence;
-  try {
-    sequence = textKeySequence(text);
-  } catch {
-    return response.status(400).json({ error: 'Only ASCII letters, numbers, spaces, and common password symbols are supported.' });
-  }
-
   textSending = true;
   try {
     for (let index = 0; index < deleteCount; index += 1) {
       remote.sendKey(RemoteKeyCode.KEYCODE_DEL, RemoteDirection.SHORT);
       await new Promise((resolve) => setTimeout(resolve, 18));
     }
-    for (const event of sequence) {
-      if (event.shifted) remote.sendKey(RemoteKeyCode.KEYCODE_SHIFT_LEFT, RemoteDirection.START_LONG);
-      remote.sendKey(event.key, RemoteDirection.SHORT);
-      if (event.shifted) remote.sendKey(RemoteKeyCode.KEYCODE_SHIFT_LEFT, RemoteDirection.END_LONG);
-      await new Promise((resolve) => setTimeout(resolve, 18));
+    if (text) {
+      client.write(createImeTextMessage(text, imeState));
+      await new Promise((resolve) => setTimeout(resolve, 25));
     }
     response.status(204).end();
   } catch (error) {

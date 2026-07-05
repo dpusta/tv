@@ -15,7 +15,7 @@ Open `http://<server-ip>:3000` on a phone. On first use, tap **Pair this TV** an
 
 The Chromecast must expose Android TV Remote Service ports 6466 and 6467, and mDNS traffic must reach the server. Docker deployments therefore generally need host networking.
 
-To type on the TV, focus its text field first and tap the keyboard button in the remote. The app supports ASCII letters, numbers, spaces, and common password symbols. Entered text is sent immediately and is not logged or stored. The default web server uses HTTP, so only enter sensitive passwords on a trusted LAN or place an HTTPS reverse proxy in front of the app.
+To type on the TV, focus its text field first and tap the keyboard button in the remote. Entered text is sent immediately through the Android TV IME protocol and is not logged or stored. The default web server uses HTTP, so only enter sensitive passwords on a trusted LAN or place an HTTPS reverse proxy in front of the app.
 
 ## Configuration
 
