@@ -16,6 +16,9 @@ const keyboardCancel = document.querySelector('#keyboardCancel');
 
 let currentState = null;
 let toastTimer;
+let keyboardValue = '';
+let keyboardQueue = Promise.resolve();
+let keyboardSession = 0;
 
 async function api(url, options = {}) {
   const response = await fetch(url, {
@@ -122,11 +125,16 @@ keys.forEach((button) => {
 });
 
 function closeKeyboard() {
+  keyboardSession += 1;
+  keyboardValue = '';
   keyboardText.value = '';
   keyboardOverlay.hidden = true;
 }
 
 keyboardButton.addEventListener('click', () => {
+  keyboardSession += 1;
+  keyboardValue = '';
+  keyboardText.value = '';
   keyboardOverlay.hidden = false;
   setTimeout(() => keyboardText.focus(), 50);
 });
@@ -136,22 +144,46 @@ keyboardOverlay.addEventListener('click', (event) => {
   if (event.target === keyboardOverlay) closeKeyboard();
 });
 
+keyboardText.addEventListener('input', () => {
+  const previous = keyboardValue;
+  const next = keyboardText.value;
+  let prefixLength = 0;
+  while (
+    prefixLength < previous.length
+    && prefixLength < next.length
+    && previous[prefixLength] === next[prefixLength]
+  ) {
+    prefixLength += 1;
+  }
+
+  const edit = {
+    deleteCount: previous.length - prefixLength,
+    text: next.slice(prefixLength),
+  };
+  keyboardValue = next;
+  if (!edit.text && edit.deleteCount === 0) return;
+
+  const session = keyboardSession;
+  keyboardQueue = keyboardQueue
+    .then(() => {
+      if (session !== keyboardSession) return null;
+      return api('/api/text', { method: 'POST', body: JSON.stringify(edit) });
+    })
+    .catch((error) => {
+      if (session !== keyboardSession) return;
+      showToast(error.message);
+      closeKeyboard();
+    });
+});
+
 keyboardForm.addEventListener('submit', async (event) => {
   event.preventDefault();
-  const text = keyboardText.value;
-  if (!text) return;
-
-  const submit = keyboardForm.querySelector('[type="submit"]');
-  submit.disabled = true;
+  await keyboardQueue;
   try {
-    await api('/api/text', { method: 'POST', body: JSON.stringify({ text }) });
+    await api('/api/key', { method: 'POST', body: JSON.stringify({ key: 'enter' }) });
     closeKeyboard();
-    showToast('Text sent');
   } catch (error) {
     showToast(error.message);
-  } finally {
-    keyboardText.value = '';
-    submit.disabled = false;
   }
 });
 

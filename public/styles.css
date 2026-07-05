@@ -153,7 +153,7 @@ svg { width: clamp(38px, 11vw, 52px); height: clamp(38px, 11vw, 52px); fill: non
 
 /* Nine equal, full-screen controls. */
 .remote {
-  grid-template: repeat(5, minmax(0, 1fr)) / repeat(2, minmax(0, 1fr));
+  grid-template: repeat(4, minmax(0, 1fr)) / repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -188,15 +188,15 @@ svg { width: clamp(38px, 11vw, 52px); height: clamp(38px, 11vw, 52px); fill: non
 .volume-label { display: none; }
 
 .remote [data-key="power"]      { grid-area: 1 / 1; }
-.remote [data-key="home"]       { grid-area: 1 / 2; }
-.remote [data-key="up"]         { grid-area: 2 / 1; }
-.remote .keyboard-key           { grid-area: 2 / 2; }
+.remote .keyboard-key           { grid-area: 1 / 2; }
+.remote [data-key="home"]       { grid-area: 1 / 3; }
+.remote [data-key="up"]         { grid-area: 2 / 2; }
 .remote [data-key="left"]       { grid-area: 3 / 1; }
-.remote [data-key="right"]      { grid-area: 3 / 2; }
-.remote [data-key="enter"]      { grid-area: 4 / 1; }
+.remote [data-key="enter"]      { grid-area: 3 / 2; }
+.remote [data-key="right"]      { grid-area: 3 / 3; }
+.remote [data-key="volume_down"] { grid-area: 4 / 1; }
 .remote [data-key="down"]       { grid-area: 4 / 2; }
-.remote [data-key="volume_down"] { grid-area: 5 / 1; }
-.remote [data-key="volume_up"]  { grid-area: 5 / 2; }
+.remote [data-key="volume_up"]  { grid-area: 4 / 3; }
 
 .remote svg {
   width: clamp(48px, 15vw, 68px);

@@ -314,8 +314,11 @@ app.post('/api/key', (request, response) => {
 
 app.post('/api/text', async (request, response) => {
   const text = typeof request.body?.text === 'string' ? request.body.text : '';
+  const deleteCount = Number.isInteger(request.body?.deleteCount) ? request.body.deleteCount : 0;
   if (state.phase !== 'connected' || !remote) return response.status(409).json({ error: 'Chromecast is not connected.' });
-  if (!text || text.length > 256) return response.status(400).json({ error: 'Text must contain between 1 and 256 characters.' });
+  if ((!text && deleteCount === 0) || text.length > 256 || deleteCount < 0 || deleteCount > 256) {
+    return response.status(400).json({ error: 'Invalid keyboard edit.' });
+  }
   if (textSending) return response.status(409).json({ error: 'Text is already being sent.' });
 
   const client = remote.remoteManager?.client;
@@ -333,6 +336,10 @@ app.post('/api/text', async (request, response) => {
 
   textSending = true;
   try {
+    for (let index = 0; index < deleteCount; index += 1) {
+      remote.sendKey(RemoteKeyCode.KEYCODE_DEL, RemoteDirection.SHORT);
+      await new Promise((resolve) => setTimeout(resolve, 18));
+    }
     for (const event of sequence) {
       if (event.shifted) remote.sendKey(RemoteKeyCode.KEYCODE_SHIFT_LEFT, RemoteDirection.START_LONG);
       remote.sendKey(event.key, RemoteDirection.SHORT);
