@@ -56,7 +56,7 @@ export function createImeTextMessage(text, counters = {}) {
       imeCounter: counters.imeCounter || 0,
       fieldCounter: counters.fieldCounter || 0,
       editInfo: [{
-        insert: 1,
+        insert: 0,
         textFieldStatus: {
           start,
           end,
@@ -105,6 +105,7 @@ export function createImeStateDecoder(onState) {
                 imeCounter: batch.imeCounter,
                 fieldCounter: batch.fieldCounter,
                 insertedText: batch.editInfo.map((edit) => edit.textFieldStatus?.value || '').join(''),
+                insertMode: batch.editInfo[0]?.insert,
                 insertionStart: batch.editInfo[0]?.textFieldStatus?.start,
                 insertionEnd: batch.editInfo[0]?.textFieldStatus?.end,
               }),

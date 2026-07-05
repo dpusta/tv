@@ -329,6 +329,9 @@ app.post('/api/pair/code', (request, response) => {
 
 app.post('/api/key', (request, response) => {
   const requestedKey = request.body?.key;
+  if (textSending && (requestedKey === 'enter' || requestedKey === 'keyboard_enter')) {
+    return response.status(409).json({ error: 'Wait for the password to finish transferring.' });
+  }
   const key = requestedKey === 'enter' && Date.now() - lastImeTextAt < 3_000
     ? 'keyboard_enter'
     : requestedKey;
@@ -372,6 +375,7 @@ app.post('/api/text', async (request, response) => {
       };
       client.write(createImeTextMessage(character, imeState));
       if (!await waitForImeChange(previous)) {
+        console.warn(`IME text rejected after ${acceptedCharacters} of ${[...text].length} characters`);
         throw new Error(`The TV stopped accepting text after ${acceptedCharacters} characters.`);
       }
       acceptedCharacters += 1;

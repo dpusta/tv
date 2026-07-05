@@ -19,6 +19,7 @@ test('encodes and decodes an IME batch edit with text and counters', () => {
     imeCounter: 7,
     fieldCounter: 4,
     insertedText: 'Ab3! café',
+    insertMode: 0,
     insertionStart: 2,
     insertionEnd: 5,
   }]);
