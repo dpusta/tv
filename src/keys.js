@@ -8,6 +8,7 @@ export const KEY_MAP = Object.freeze({
   left: RemoteKeyCode.KEYCODE_DPAD_LEFT,
   right: RemoteKeyCode.KEYCODE_DPAD_RIGHT,
   enter: RemoteKeyCode.KEYCODE_DPAD_CENTER,
+  keyboard_enter: RemoteKeyCode.KEYCODE_ENTER,
   home: RemoteKeyCode.KEYCODE_HOME,
   volume_up: RemoteKeyCode.KEYCODE_VOLUME_UP,
   volume_down: RemoteKeyCode.KEYCODE_VOLUME_DOWN,

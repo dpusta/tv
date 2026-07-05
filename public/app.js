@@ -180,7 +180,8 @@ keyboardForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   await keyboardQueue;
   try {
-    await api('/api/key', { method: 'POST', body: JSON.stringify({ key: 'enter' }) });
+    await new Promise((resolve) => setTimeout(resolve, 120));
+    await api('/api/key', { method: 'POST', body: JSON.stringify({ key: 'keyboard_enter' }) });
     closeKeyboard();
   } catch (error) {
     showToast(error.message);
