@@ -201,6 +201,7 @@ async function connect(host, pairing, force = false) {
       state.phase = 'found';
       state.error = 'The saved pairing no longer works. Pair this TV again.';
       connectingHost = null;
+      teardownRemote();
     });
     currentRemote.on('error', (error) => {
       if (remote !== currentRemote) return;
@@ -208,10 +209,14 @@ async function connect(host, pairing, force = false) {
     });
 
     connectTimer = setTimeout(() => {
-      if (state.phase === 'connecting' || state.phase === 'pairing') {
+      if (
+        remote === currentRemote
+        && (state.phase === 'connecting' || state.phase === 'pairing')
+      ) {
         state.phase = credentials ? 'found' : 'error';
         state.error = 'The Chromecast did not respond. Check that it is awake and on the same network.';
         connectingHost = null;
+        teardownRemote();
       }
     }, CONNECTION_TIMEOUT_MS);
 
@@ -224,6 +229,7 @@ async function connect(host, pairing, force = false) {
           connectingHost = null;
           state.phase = 'error';
           state.error ||= 'Pairing was not accepted by the TV. Start pairing again.';
+          teardownRemote();
         }
       })
       .catch((error) => {
@@ -232,6 +238,7 @@ async function connect(host, pairing, force = false) {
         connectingHost = null;
         state.phase = 'error';
         state.error = error.message || 'Could not connect to the Chromecast.';
+        teardownRemote();
       });
   } catch (error) {
     connectingHost = null;
@@ -269,6 +276,7 @@ app.post('/api/pair/code', (request, response) => {
         state.phase = 'error';
         state.error = 'Pairing did not complete. Check the code and try again.';
         connectingHost = null;
+        teardownRemote();
       }
     }, 15_000);
     const accepted = remote.sendCode(code);
