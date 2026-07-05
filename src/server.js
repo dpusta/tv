@@ -47,6 +47,7 @@ let textSending = false;
 let imeState = {};
 let imeDecoder = null;
 let lastImeTextAt = 0;
+let imeTypingSessionUntil = 0;
 
 const CONNECTION_TIMEOUT_MS = 15_000;
 const STALE_CONNECTION_MS = 25_000;
@@ -366,6 +367,9 @@ app.post('/api/key', (request, response) => {
   try {
     if (key === 'power') remote.sendPower();
     else remote.sendKey(KEY_MAP[key], RemoteDirection.SHORT);
+    if (key === 'keyboard_enter' || key === 'home' || key === 'back') {
+      imeTypingSessionUntil = 0;
+    }
     response.status(204).end();
   } catch (error) {
     response.status(503).json({ error: error.message });
@@ -387,15 +391,24 @@ app.post('/api/text', async (request, response) => {
   textSending = true;
   try {
     console.info(`Sending IME text (${[...text].length} characters)`);
-    // Android TV Remote Service rejects IME batches while its virtual keyboard
-    // is visible. BACK hides it while preserving the focused text field.
-    remote.sendKey(KEY_MAP.back, RemoteDirection.SHORT);
-    await new Promise((resolve) => setTimeout(resolve, 350));
+    const continuingSession = Date.now() < imeTypingSessionUntil;
+    if (!continuingSession) {
+      // Android TV Remote Service rejects IME batches while its virtual
+      // keyboard is visible. Hide it once at the start of a typing session.
+      remote.sendKey(KEY_MAP.back, RemoteDirection.SHORT);
+      await new Promise((resolve) => setTimeout(resolve, 350));
+    }
+
+    const existingValue = continuingSession && typeof imeState.value === 'string'
+      ? imeState.value
+      : '';
+    const expectedValue = existingValue + text;
     const previousCounterField = imeState.counterField;
     client.write(createImeTextMessage(text, imeState));
     lastImeTextAt = Date.now();
-    await verifyImeText(text, previousCounterField);
-    console.info(`IME text verified (${[...text].length} characters)`);
+    await verifyImeText(expectedValue, previousCounterField);
+    imeTypingSessionUntil = Date.now() + 10_000;
+    console.info(`IME text verified (${[...expectedValue].length} total characters)`);
     response.status(204).end();
   } catch (error) {
     response.status(503).json({ error: error.message });
