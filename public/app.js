@@ -8,6 +8,11 @@ const codeForm = document.querySelector('#codeForm');
 const pairCode = document.querySelector('#pairCode');
 const toast = document.querySelector('#toast');
 const keys = [...document.querySelectorAll('[data-key]')];
+const keyboardButton = document.querySelector('#keyboardButton');
+const keyboardOverlay = document.querySelector('#keyboardOverlay');
+const keyboardForm = document.querySelector('#keyboardForm');
+const keyboardText = document.querySelector('#keyboardText');
+const keyboardCancel = document.querySelector('#keyboardCancel');
 
 let currentState = null;
 let toastTimer;
@@ -114,6 +119,40 @@ keys.forEach((button) => {
       void refresh();
     }
   });
+});
+
+function closeKeyboard() {
+  keyboardText.value = '';
+  keyboardOverlay.hidden = true;
+}
+
+keyboardButton.addEventListener('click', () => {
+  keyboardOverlay.hidden = false;
+  setTimeout(() => keyboardText.focus(), 50);
+});
+
+keyboardCancel.addEventListener('click', closeKeyboard);
+keyboardOverlay.addEventListener('click', (event) => {
+  if (event.target === keyboardOverlay) closeKeyboard();
+});
+
+keyboardForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const text = keyboardText.value;
+  if (!text) return;
+
+  const submit = keyboardForm.querySelector('[type="submit"]');
+  submit.disabled = true;
+  try {
+    await api('/api/text', { method: 'POST', body: JSON.stringify({ text }) });
+    closeKeyboard();
+    showToast('Text sent');
+  } catch (error) {
+    showToast(error.message);
+  } finally {
+    keyboardText.value = '';
+    submit.disabled = false;
+  }
 });
 
 void refresh();

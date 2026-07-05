@@ -153,7 +153,7 @@ svg { width: clamp(38px, 11vw, 52px); height: clamp(38px, 11vw, 52px); fill: non
 
 /* Nine equal, full-screen controls. */
 .remote {
-  grid-template: repeat(3, minmax(0, 1fr)) / repeat(3, minmax(0, 1fr));
+  grid-template: repeat(5, minmax(0, 1fr)) / repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -188,16 +188,55 @@ svg { width: clamp(38px, 11vw, 52px); height: clamp(38px, 11vw, 52px); fill: non
 .volume-label { display: none; }
 
 .remote [data-key="power"]      { grid-area: 1 / 1; }
-.remote [data-key="up"]         { grid-area: 1 / 2; }
-.remote [data-key="home"]       { grid-area: 1 / 3; }
-.remote [data-key="left"]       { grid-area: 2 / 1; }
-.remote [data-key="enter"]      { grid-area: 2 / 2; }
-.remote [data-key="right"]      { grid-area: 2 / 3; }
-.remote [data-key="volume_down"] { grid-area: 3 / 1; }
-.remote [data-key="down"]       { grid-area: 3 / 2; }
-.remote [data-key="volume_up"]  { grid-area: 3 / 3; }
+.remote [data-key="home"]       { grid-area: 1 / 2; }
+.remote [data-key="up"]         { grid-area: 2 / 1; }
+.remote .keyboard-key           { grid-area: 2 / 2; }
+.remote [data-key="left"]       { grid-area: 3 / 1; }
+.remote [data-key="right"]      { grid-area: 3 / 2; }
+.remote [data-key="enter"]      { grid-area: 4 / 1; }
+.remote [data-key="down"]       { grid-area: 4 / 2; }
+.remote [data-key="volume_down"] { grid-area: 5 / 1; }
+.remote [data-key="volume_up"]  { grid-area: 5 / 2; }
 
 .remote svg {
   width: clamp(48px, 15vw, 68px);
   height: clamp(48px, 15vw, 68px);
 }
+
+.keyboard-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  align-items: end;
+  padding: 12px;
+  background: rgba(20, 21, 18, .72);
+  backdrop-filter: blur(8px);
+}
+
+.keyboard-panel {
+  width: min(100%, 560px);
+  margin: 0 auto max(0px, env(safe-area-inset-bottom));
+  padding: 22px;
+  border-radius: 26px;
+  background: #f0efe8;
+  color: #272822;
+}
+
+.keyboard-panel label { display: block; font-size: 24px; font-weight: 750; }
+.keyboard-panel p { margin: 5px 0 18px; color: #6e7068; }
+.keyboard-panel input {
+  width: 100%;
+  height: 64px;
+  padding: 0 18px;
+  border: 2px solid #cbc9c0;
+  border-radius: 16px;
+  outline: 0;
+  background: #fff;
+  color: #272822;
+  font-size: 22px;
+}
+.keyboard-panel input:focus { border-color: #7d9161; }
+.keyboard-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.keyboard-actions button { min-height: 56px; border-radius: 16px; background: #d4d2ca; font-weight: 750; }
+.keyboard-actions button[type="submit"] { background: #282a25; color: #fff; }

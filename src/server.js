@@ -3,7 +3,7 @@ import { Bonjour } from 'bonjour-service';
 import { mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { AndroidRemote, KEY_MAP, RemoteDirection } from './keys.js';
+import { AndroidRemote, KEY_MAP, RemoteDirection, RemoteKeyCode, textKeySequence } from './keys.js';
 import { normalizePairingCode } from './pairing-code.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -29,6 +29,7 @@ let bonjour = null;
 let lastRemoteActivity = 0;
 let lastConnectAttempt = 0;
 let observedClient = null;
+let textSending = false;
 
 const CONNECTION_TIMEOUT_MS = 15_000;
 const STALE_CONNECTION_MS = 25_000;
@@ -308,6 +309,41 @@ app.post('/api/key', (request, response) => {
     response.status(204).end();
   } catch (error) {
     response.status(503).json({ error: error.message });
+  }
+});
+
+app.post('/api/text', async (request, response) => {
+  const text = typeof request.body?.text === 'string' ? request.body.text : '';
+  if (state.phase !== 'connected' || !remote) return response.status(409).json({ error: 'Chromecast is not connected.' });
+  if (!text || text.length > 256) return response.status(400).json({ error: 'Text must contain between 1 and 256 characters.' });
+  if (textSending) return response.status(409).json({ error: 'Text is already being sent.' });
+
+  const client = remote.remoteManager?.client;
+  if (!client || client.destroyed || !client.writable) {
+    scheduleReconnect('text entered while socket was unavailable', 250);
+    return response.status(503).json({ error: 'Chromecast is reconnecting. Try again in a moment.' });
+  }
+
+  let sequence;
+  try {
+    sequence = textKeySequence(text);
+  } catch {
+    return response.status(400).json({ error: 'Only ASCII letters, numbers, spaces, and common password symbols are supported.' });
+  }
+
+  textSending = true;
+  try {
+    for (const event of sequence) {
+      if (event.shifted) remote.sendKey(RemoteKeyCode.KEYCODE_SHIFT_LEFT, RemoteDirection.START_LONG);
+      remote.sendKey(event.key, RemoteDirection.SHORT);
+      if (event.shifted) remote.sendKey(RemoteKeyCode.KEYCODE_SHIFT_LEFT, RemoteDirection.END_LONG);
+      await new Promise((resolve) => setTimeout(resolve, 18));
+    }
+    response.status(204).end();
+  } catch (error) {
+    response.status(503).json({ error: error.message });
+  } finally {
+    textSending = false;
   }
 });
 

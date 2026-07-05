@@ -24,6 +24,9 @@
           <button class="key key-small" data-key="home" aria-label="Home">
             <svg viewBox="0 0 24 24"><path d="m4 10 8-7 8 7v10h-6v-6h-4v6H4Z" /></svg>
           </button>
+          <button class="key key-small keyboard-key" id="keyboardButton" aria-label="Keyboard">
+            <svg viewBox="0 0 24 24"><path d="M3 6h18v12H3zM6 9h.01M9 9h.01M12 9h.01M15 9h.01M18 9h.01M6 12h.01M9 12h.01M12 12h.01M15 12h.01M18 12h.01M7 15h10" /></svg>
+          </button>
         </div>
 
         <div class="dpad" aria-label="Directional pad">
@@ -57,6 +60,18 @@
     </div>
 
     <div class="toast" id="toast" role="status" hidden></div>
+
+    <div class="keyboard-overlay" id="keyboardOverlay" hidden>
+      <form class="keyboard-panel" id="keyboardForm">
+        <label for="keyboardText">Type on TV</label>
+        <p>Focus a text field on the TV first.</p>
+        <input id="keyboardText" type="password" maxlength="256" autocomplete="new-password" autocapitalize="none" spellcheck="false" placeholder="Password or text" />
+        <div class="keyboard-actions">
+          <button type="button" id="keyboardCancel">Cancel</button>
+          <button type="submit">Send</button>
+        </div>
+      </form>
+    </div>
     <script type="module" src="/app.js"></script>
   </body>
 </html>
