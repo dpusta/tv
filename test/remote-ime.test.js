@@ -8,6 +8,8 @@ test('encodes and decodes an IME batch edit with text and counters', () => {
   const message = createImeTextMessage('Ab3! café', {
     imeCounter: 7,
     fieldCounter: 4,
+    start: 2,
+    end: 2,
   });
 
   decoder.push(message.subarray(0, 3));
@@ -18,7 +20,7 @@ test('encodes and decodes an IME batch edit with text and counters', () => {
     fieldCounter: 4,
     insertedText: 'Ab3! café',
     insertMode: 0,
-    insertionStart: 8,
-    insertionEnd: 8,
+    insertionStart: 2,
+    insertionEnd: 2,
   }]);
 });
