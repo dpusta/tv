@@ -190,7 +190,9 @@ svg { width: clamp(38px, 11vw, 52px); height: clamp(38px, 11vw, 52px); fill: non
 .remote [data-key="power"]      { grid-area: 1 / 1; }
 .remote .keyboard-key           { grid-area: 1 / 2; }
 .remote [data-key="home"]       { grid-area: 1 / 3; }
+.remote [data-key="back"]       { grid-area: 2 / 1; }
 .remote [data-key="up"]         { grid-area: 2 / 2; }
+.remote [data-key="mute"]       { grid-area: 2 / 3; }
 .remote [data-key="left"]       { grid-area: 3 / 1; }
 .remote [data-key="enter"]      { grid-area: 3 / 2; }
 .remote [data-key="right"]      { grid-area: 3 / 3; }
